@@ -175,6 +175,11 @@
   color: #166534;
 }
 
+.estado-confirmada {
+  background: #dcfce7;
+  color: #166534;
+}
+
 .estado-cancelada {
   background: #fee2e2;
   color: #991b1b;
@@ -189,6 +194,13 @@
   text-align: center;
   position: relative;
   z-index: 1;
+}
+
+.acciones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-ver-detalle {
@@ -219,6 +231,55 @@
 .btn-ver-detalle:focus {
   outline: 2px solid #0a0a0a;
   outline-offset: 2px;
+}
+
+.btn-confirmar {
+  padding: 6px 12px;
+  background: #0f766e;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  height: 28px;
+}
+
+.btn-confirmar:hover {
+  background: #115e59;
+}
+
+.btn-confirmar:active {
+  transform: scale(0.98);
+}
+
+.btn-confirmar:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.alerta {
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.alerta-success {
+  background: #ecfdf3;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.alerta-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecdd3;
 }
 
 .cargando {

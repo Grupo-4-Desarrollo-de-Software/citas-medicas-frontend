@@ -1,18 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { citasApi } from '../services/api';
 import type { Cita } from '../types/cita';
 import './ListaCitas.css';
+
+type Alerta = { tipo: 'success' | 'error'; mensaje: string };
 
 export function ListaCitas() {
   const navigate = useNavigate();
   const [citas, setCitas] = useState<Cita[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alerta, setAlerta] = useState<Alerta | null>(null);
+  const [confirmandoIds, setConfirmandoIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     cargarCitas();
   }, []);
+
+  useEffect(() => {
+    if (!alerta) return;
+    const timer = setTimeout(() => setAlerta(null), 3500);
+    return () => clearTimeout(timer);
+  }, [alerta]);
 
   const cargarCitas = async () => {
     try {
@@ -25,6 +35,37 @@ export function ListaCitas() {
       console.error('Error al cargar citas:', err);
     } finally {
       setCargando(false);
+    }
+  };
+
+  const confirmarCita = async (id: number) => {
+    if (confirmandoIds.has(id)) return;
+    setConfirmandoIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+
+    try {
+      const actualizada = await citasApi.confirmarCita(id);
+      setCitas((prev) =>
+        prev.map((cita) =>
+          cita.id_cita === id ? { ...cita, ...(actualizada || {}), estado: 'Confirmada' } : cita
+        )
+      );
+      setAlerta({ tipo: 'success', mensaje: `Cita #${id} confirmada` });
+    } catch (err) {
+      setAlerta({
+        tipo: 'error',
+        mensaje: err instanceof Error ? err.message : 'No se pudo confirmar la cita',
+      });
+      console.error('Error al confirmar cita:', err);
+    } finally {
+      setConfirmandoIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -48,18 +89,23 @@ export function ListaCitas() {
   return (
     <div className="lista-citas">
       <div className="lista-citas-header">
-        <h2>Lista de Citas Médicas</h2>
+        <h2>Lista de Citas Medicas</h2>
         <button onClick={cargarCitas} className="btn-refrescar">
-          🔄 Actualizar
+          Actualizar
         </button>
       </div>
+      {alerta && (
+        <div className={`alerta ${alerta.tipo === 'success' ? 'alerta-success' : 'alerta-error'}`}>
+          {alerta.mensaje}
+        </div>
+      )}
       <div className="tabla-container">
         <table className="tabla-citas">
           <thead>
             <tr>
               <th>ID</th>
               <th>Paciente</th>
-              <th>Médico</th>
+              <th>Medico</th>
               <th>Fecha</th>
               <th>Hora</th>
               <th>Motivo</th>
@@ -69,8 +115,8 @@ export function ListaCitas() {
           </thead>
           <tbody>
             {citas.map((cita) => (
-              <tr 
-                key={cita.id_cita} 
+              <tr
+                key={cita.id_cita}
                 className="fila-cita"
                 onClick={() => navigate(`/citas/${cita.id_cita}`)}
                 style={{ cursor: 'pointer' }}
@@ -91,17 +137,31 @@ export function ListaCitas() {
                   )}
                 </td>
                 <td className="col-acciones" onClick={(e) => e.stopPropagation()}>
-                  <button 
-                    type="button"
-                    className="btn-ver-detalle"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigate(`/citas/${cita.id_cita}`);
-                    }}
-                  >
-                    Ver Detalle
-                  </button>
+                  <div className="acciones">
+                    <button
+                      type="button"
+                      className="btn-ver-detalle"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/citas/${cita.id_cita}`);
+                      }}
+                    >
+                      Ver Detalle
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-confirmar"
+                      disabled={confirmandoIds.has(cita.id_cita) || cita.estado?.toLowerCase() === 'confirmada'}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        confirmarCita(cita.id_cita);
+                      }}
+                    >
+                      {confirmandoIds.has(cita.id_cita) ? 'Confirmando...' : 'Confirmar'}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

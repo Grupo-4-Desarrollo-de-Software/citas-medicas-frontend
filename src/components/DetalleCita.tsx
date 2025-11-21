@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { citasApi } from '../services/api';
 import type { Cita } from '../types/cita';
 import './DetalleCita.css';
+
+type Alerta = { tipo: 'success' | 'error'; mensaje: string };
 
 export function DetalleCita() {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +12,8 @@ export function DetalleCita() {
   const [cita, setCita] = useState<Cita | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [alerta, setAlerta] = useState<Alerta | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
 
   useEffect(() => {
     const cargarCita = async () => {
@@ -30,6 +34,32 @@ export function DetalleCita() {
 
     cargarCita();
   }, [id]);
+
+  useEffect(() => {
+    if (!alerta) return;
+    const timer = setTimeout(() => setAlerta(null), 3500);
+    return () => clearTimeout(timer);
+  }, [alerta]);
+
+  const handleConfirmar = async () => {
+    if (!cita || confirmando || cita.estado?.toLowerCase() === 'confirmada') return;
+    setConfirmando(true);
+    try {
+      const actualizada = await citasApi.confirmarCita(cita.id_cita);
+      setCita((prev) =>
+        prev ? { ...prev, ...(actualizada || {}), estado: 'Confirmada' } : prev
+      );
+      setAlerta({ tipo: 'success', mensaje: `Cita #${cita.id_cita} confirmada` });
+    } catch (err) {
+      setAlerta({
+        tipo: 'error',
+        mensaje: err instanceof Error ? err.message : 'No se pudo confirmar la cita',
+      });
+      console.error('Error al confirmar la cita:', err);
+    } finally {
+      setConfirmando(false);
+    }
+  };
 
   if (cargando) {
     return <div className="cargando">Cargando detalles de la cita...</div>;
@@ -54,21 +84,38 @@ export function DetalleCita() {
     );
   }
 
+  const yaConfirmada = cita.estado?.toLowerCase() === 'confirmada';
+
   return (
     <div className="detalle-cita">
       <div className="detalle-cita-header">
         <h2>Detalle de la Cita #{cita.id_cita}</h2>
-        <button onClick={() => navigate('/')} className="btn-volver">
-          ← Volver a la Lista
-        </button>
+        <div className="acciones-header">
+          <button onClick={() => navigate('/')} className="btn-volver">
+            Volver a la Lista
+          </button>
+          <button
+            type="button"
+            className="btn-confirmar"
+            disabled={yaConfirmada || confirmando}
+            onClick={handleConfirmar}
+          >
+            {yaConfirmada ? 'Confirmada' : confirmando ? 'Confirmando...' : 'Confirmar cita'}
+          </button>
+        </div>
       </div>
+      {alerta && (
+        <div className={`alerta ${alerta.tipo === 'success' ? 'alerta-success' : 'alerta-error'}`}>
+          {alerta.mensaje}
+        </div>
+      )}
       <div className="detalle-cita-content">
         <div className="detalle-seccion">
-          <h3>Información del Paciente</h3>
+          <h3>Informacion del Paciente</h3>
           <p><strong>Nombre:</strong> {cita.paciente}</p>
         </div>
         <div className="detalle-seccion">
-          <h3>Información del Médico</h3>
+          <h3>Informacion del Medico</h3>
           <p><strong>Nombre:</strong> {cita.medico}</p>
         </div>
         <div className="detalle-seccion">
@@ -101,7 +148,7 @@ export function DetalleCita() {
         {!cita.motivo && !cita.estado && !cita.notas && (
           <div className="detalle-seccion">
             <p style={{ color: '#5f6368', fontStyle: 'italic' }}>
-              No hay información adicional disponible para esta cita.
+              No hay informacion adicional disponible para esta cita.
             </p>
           </div>
         )}
