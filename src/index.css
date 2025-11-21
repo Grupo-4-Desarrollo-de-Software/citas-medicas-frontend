@@ -10,13 +10,26 @@
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #0f172a;
+
+  /* Paleta orientada a salud */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f7fb;
+  --color-border: #e2e8f0;
+  --color-accent: #0ea5e9;
+  --color-accent-strong: #0284c7;
+  --color-text: #0f172a;
+  --color-subtle: #475569;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #fafafa;
+  background: #f5f8fc;
 }
 
 #root {
