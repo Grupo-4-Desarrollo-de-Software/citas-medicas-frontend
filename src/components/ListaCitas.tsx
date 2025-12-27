@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { citasApi, especialidadesApi } from '../services/api';
+import { citasApi, especialidadesApi, pacientesApi, sedesApi } from '../services/api';
 import type { Cita } from '../types/cita';
 import type { Especialidad } from '../types/especialidad';
+import type { Paciente } from '../types/paciente';
+import type { Sede } from '../types/sede';
 import './ListaCitas.css';
 
 type Alerta = { tipo: 'success' | 'error'; mensaje: string };
@@ -11,6 +13,8 @@ export function ListaCitas() {
   const navigate = useNavigate();
   const [citas, setCitas] = useState<Cita[]>([]);
   const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [sedes, setSedes] = useState<Sede[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alerta, setAlerta] = useState<Alerta | null>(null);
@@ -31,12 +35,20 @@ export function ListaCitas() {
     try {
       setCargando(true);
       setError(null);
-      const [citasData, especialidadesData] = await Promise.all([
+      const [citasData, especialidadesData, pacientesData, sedesData] = await Promise.all([
         citasApi.listarCitas(),
         especialidadesApi.listarEspecialidades(),
+        pacientesApi.listarPacientes(),
+        sedesApi.listarSedes(),
       ]);
-      setCitas(citasData);
+      
+      // Ordenar citas por ID de mayor a menor
+      const citasOrdenadas = citasData.sort((a, b) => b.id_cita - a.id_cita);
+      
+      setCitas(citasOrdenadas);
       setEspecialidades(especialidadesData);
+      setPacientes(pacientesData);
+      setSedes(sedesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       console.error('Error al cargar citas:', err);
@@ -124,6 +136,64 @@ export function ListaCitas() {
     return especialidad ? especialidad.nombre : `ID: ${id_especialidad}`;
   };
 
+  // Función para obtener el nombre del paciente
+  const obtenerNombrePaciente = (id_paciente: number): string => {
+    if (!id_paciente) return 'No definido';
+    const paciente = pacientes.find(p => p.id_paciente === id_paciente);
+    return paciente ? paciente.nombre : `ID: ${id_paciente}`;
+  };
+
+  // Función para obtener el nombre de la sede
+  const obtenerNombreSede = (id_sede: number | undefined): string => {
+    if (!id_sede) return 'No definido';
+    const sede = sedes.find(s => s.id_sede === id_sede);
+    return sede ? sede.nombre : `ID: ${id_sede}`;
+  };
+
+  // Función para obtener la clase CSS según el estado
+  const obtenerClaseEstado = (estado: string): string => {
+    const estadoNormalizado = estado.toLowerCase().trim();
+    
+    if (estadoNormalizado.includes('confirmada') || estadoNormalizado.includes('confirmed')) {
+      return 'estado-confirmada';
+    }
+    if (estadoNormalizado.includes('cancelada') || estadoNormalizado.includes('canceled') || estadoNormalizado.includes('cancelled')) {
+      return 'estado-cancelada';
+    }
+    if (estadoNormalizado.includes('completada') || estadoNormalizado.includes('completed')) {
+      return 'estado-completada';
+    }
+    if (estadoNormalizado.includes('proceso') || estadoNormalizado.includes('progress')) {
+      return 'estado-en-proceso';
+    }
+    if (estadoNormalizado.includes('programada') || estadoNormalizado.includes('scheduled') || estadoNormalizado.includes('pendiente') || estadoNormalizado.includes('pending')) {
+      return 'estado-programada';
+    }
+    
+    return 'estado-programada'; // Por defecto
+  };
+
+  // Función para obtener estilos inline según el estado
+  const obtenerEstilosEstado = (estado: string): React.CSSProperties => {
+    const estadoNormalizado = estado.toLowerCase().trim();
+    console.log('Estado normalizado:', estadoNormalizado);
+    
+    if (estadoNormalizado.includes('confirmad') || estadoNormalizado.includes('confirmed')) {
+      return { background: '#ecfdf3', color: '#166534', border: '1px solid #bbf7d0' };
+    }
+    if (estadoNormalizado.includes('cancelad') || estadoNormalizado.includes('canceled') || estadoNormalizado.includes('cancelled')) {
+      return { background: '#fef2f2', color: '#991b1b', border: '1px solid #fecdd3' };
+    }
+    if (estadoNormalizado.includes('completad') || estadoNormalizado.includes('completed')) {
+      return { background: '#ecfdf3', color: '#166534', border: '1px solid #bbf7d0' };
+    }
+    if (estadoNormalizado.includes('proceso') || estadoNormalizado.includes('progress')) {
+      return { background: '#fef3c7', color: '#92400e', border: '1px solid #fbbf24' };
+    }
+    // Por defecto: programada
+    return { background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd' };
+  };
+
   // Función para formatear la fecha
   const formatearFecha = (fecha: string) => {
     const date = new Date(fecha);
@@ -171,7 +241,7 @@ export function ListaCitas() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>ID Paciente</th>
+              <th>Paciente</th>
               <th>Especialidad</th>
               <th>Fecha</th>
               <th>Hora</th>
@@ -189,13 +259,13 @@ export function ListaCitas() {
                 style={{ cursor: 'pointer' }}
               >
                 <td className="col-id">#{cita.id_cita}</td>
-                <td className="col-paciente">{cita.id_paciente}</td>
+                <td className="col-paciente">{obtenerNombrePaciente(cita.id_paciente)}</td>
                 <td className="col-especialidad">{obtenerNombreEspecialidad(cita.id_especialidad)}</td>
                 <td className="col-fecha">{formatearFecha(cita.fecha)}</td>
                 <td className="col-hora">{formatearHora(cita.hora)}</td>
                 <td className="col-motivo">{cita.canal}</td>
                 <td className="col-estado">
-                  <span className={`cita-estado estado-${cita.estado.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <span className="cita-estado" style={obtenerEstilosEstado(cita.estado)}>
                     {cita.estado}
                   </span>
                 </td>
@@ -215,7 +285,7 @@ export function ListaCitas() {
                     <button
                       type="button"
                       className="btn-confirmar"
-                      disabled={confirmandoIds.has(cita.id_cita) || cita.estado?.toLowerCase() === 'confirmada' || cita.estado?.toLowerCase() === 'cancelada'}
+                      disabled={confirmandoIds.has(cita.id_cita) || cita.estado?.toLowerCase().includes('confirmad') || cita.estado?.toLowerCase().includes('cancelad')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -227,7 +297,7 @@ export function ListaCitas() {
                     <button
                       type="button"
                       className="btn-cancelar"
-                      disabled={cancelandoIds.has(cita.id_cita) || cita.estado?.toLowerCase() === 'cancelada'}
+                      disabled={cancelandoIds.has(cita.id_cita) || cita.estado?.toLowerCase().includes('cancelad')}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

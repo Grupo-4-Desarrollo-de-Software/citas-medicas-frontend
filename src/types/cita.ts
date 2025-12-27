@@ -2,6 +2,7 @@ export interface Cita {
   id_cita: number;
   id_paciente: number;
   id_especialidad: number;
+  id_sede?: number;
   fecha: string;
   hora: string;
   canal: string;
