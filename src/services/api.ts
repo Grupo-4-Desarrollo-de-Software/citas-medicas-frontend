@@ -1,4 +1,9 @@
 import type { Cita } from "../types/cita";
+import type {
+  ActualizarPacienteData,
+  CrearPacienteData,
+  Paciente,
+} from "../types/paciente";
 
 // URL de la API real
 const API_BASE_URL = "https://citas-medicas-backend-1kwn.onrender.com/api";
@@ -130,5 +135,117 @@ export const authApi = {
    */
   getToken(): string | null {
     return localStorage.getItem("token");
+  },
+};
+
+export const pacientesApi = {
+  /**
+   * Obtiene todos los pacientes
+   */
+  async listarPacientes(): Promise<Paciente[]> {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/pacientes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener los pacientes: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Obtiene un paciente por su ID
+   */
+  async obtenerPacientePorId(id: number): Promise<Paciente> {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/pacientes/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener el paciente: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Crea un nuevo paciente
+   */
+  async crearPaciente(data: CrearPacienteData): Promise<Paciente> {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/pacientes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al crear el paciente: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Actualiza un paciente existente
+   */
+  async actualizarPaciente(
+    id: number,
+    data: ActualizarPacienteData
+  ): Promise<Paciente> {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/pacientes/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al actualizar el paciente: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Elimina un paciente
+   */
+  async eliminarPaciente(id: number): Promise<void> {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/pacientes/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al eliminar el paciente: ${response.statusText}`
+      );
+    }
   },
 };
