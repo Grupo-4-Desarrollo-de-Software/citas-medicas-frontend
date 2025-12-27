@@ -1,9 +1,15 @@
 import type { Cita } from "../types/cita";
 import type {
+  ActualizarEspecialidadData,
+  CrearEspecialidadData,
+  Especialidad,
+} from "../types/especialidad";
+import type {
   ActualizarPacienteData,
   CrearPacienteData,
   Paciente,
 } from "../types/paciente";
+import type { ActualizarSedeData, CrearSedeData, Sede } from "../types/sede";
 
 // URL de la API real
 const API_BASE_URL = "https://citas-medicas-backend-1kwn.onrender.com/api";
@@ -23,7 +29,12 @@ export const citasApi = {
    * Obtiene todas las citas médicas desde la API real.
    */
   async listarCitas(): Promise<Cita[]> {
-    const response = await fetch(`${API_BASE_URL}/citas`);
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/citas`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Error al obtener las citas: ${response.statusText}`);
@@ -36,7 +47,12 @@ export const citasApi = {
    * Obtiene una cita médica por su ID.
    */
   async obtenerCitaPorId(id: number): Promise<Cita> {
-    const response = await fetch(`${API_BASE_URL}/citas/${id}`);
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/citas/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Error al obtener la cita: ${response.statusText}`);
@@ -46,19 +62,42 @@ export const citasApi = {
   },
 
   /**
-   * Confirma una cita y retorna la cita actualizada.
+   * Confirma una cita con teléfono y retorna la cita actualizada.
    */
-  async confirmarCita(id: number): Promise<Cita> {
-    const response = await fetch(`${API_BASE_URL}/citas/${id}`, {
-      method: "PATCH",
+  async confirmarCita(id_cita: number, telefono: string): Promise<Cita> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/citas/confirmar`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ estado: "CONFIRMADA" }),
+      body: JSON.stringify({ id_cita, telefono }),
     });
 
     if (!response.ok) {
       throw new Error(`Error al confirmar la cita: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Cancela una cita y retorna la cita actualizada.
+   */
+  async cancelarCita(id_cita: number): Promise<Cita> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/citas/cancelar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ id_cita }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al cancelar la cita: ${response.statusText}`);
     }
 
     return await response.json();
@@ -245,6 +284,306 @@ export const pacientesApi = {
       throw new Error(
         errorData.message ||
           `Error al eliminar el paciente: ${response.statusText}`
+      );
+    }
+  },
+};
+
+export const sedesApi = {
+  /**
+   * Obtiene todas las sedes
+   */
+  async listarSedes(): Promise<Sede[]> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/sedes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener las sedes: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Obtiene una sede por su ID
+   */
+  async obtenerSedePorId(id: number): Promise<Sede> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/sedes/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener la sede: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Obtiene las especialidades de una sede
+   */
+  async obtenerEspecialidadesPorSede(idSede: number): Promise<Especialidad[]> {
+    const token = authApi.getToken();
+    const response = await fetch(
+      `${API_BASE_URL}/sedes/${idSede}/especialidades`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Error al obtener las especialidades: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Crea una nueva sede
+   */
+  async crearSede(data: CrearSedeData): Promise<Sede> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/sedes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al crear la sede: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Actualiza una sede existente
+   */
+  async actualizarSede(id: number, data: ActualizarSedeData): Promise<Sede> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/sedes/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al actualizar la sede: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Elimina una sede
+   */
+  async eliminarSede(id: number): Promise<void> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/sedes/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al eliminar la sede: ${response.statusText}`
+      );
+    }
+  },
+
+  /**
+   * Vincula una especialidad a una sede
+   */
+  async vincularEspecialidad(
+    idSede: number,
+    idEspecialidad: number
+  ): Promise<void> {
+    const token = authApi.getToken();
+    const response = await fetch(
+      `${API_BASE_URL}/sedes/${idSede}/especialidades/${idEspecialidad}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al vincular la especialidad: ${response.statusText}`
+      );
+    }
+  },
+
+  /**
+   * Desvincula una especialidad de una sede
+   */
+  async desvincularEspecialidad(
+    idSede: number,
+    idEspecialidad: number
+  ): Promise<void> {
+    const token = authApi.getToken();
+    const response = await fetch(
+      `${API_BASE_URL}/sedes/${idSede}/especialidades/${idEspecialidad}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al desvincular la especialidad: ${response.statusText}`
+      );
+    }
+  },
+};
+
+export const especialidadesApi = {
+  /**
+   * Obtiene todas las especialidades
+   */
+  async listarEspecialidades(): Promise<Especialidad[]> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/especialidades`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Error al obtener las especialidades: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Obtiene una especialidad por su ID
+   */
+  async obtenerEspecialidadPorId(id: number): Promise<Especialidad> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/especialidades/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Error al obtener la especialidad: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Crea una nueva especialidad
+   */
+  async crearEspecialidad(data: CrearEspecialidadData): Promise<Especialidad> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/especialidades`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al crear la especialidad: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Actualiza una especialidad existente
+   */
+  async actualizarEspecialidad(
+    id: number,
+    data: ActualizarEspecialidadData
+  ): Promise<Especialidad> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/especialidades/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al actualizar la especialidad: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Elimina una especialidad
+   */
+  async eliminarEspecialidad(id: number): Promise<void> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/especialidades/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message ||
+          `Error al eliminar la especialidad: ${response.statusText}`
       );
     }
   },

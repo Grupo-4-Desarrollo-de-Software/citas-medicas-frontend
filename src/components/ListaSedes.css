@@ -1,0 +1,177 @@
+.lista-sedes {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.lista-sedes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.lista-sedes-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.btn-nueva-sede {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px -2px rgba(14, 165, 233, 0.3);
+}
+
+.btn-nueva-sede:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(14, 165, 233, 0.4);
+}
+
+.tabla-sedes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.tabla-sedes thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tabla-sedes th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tabla-sedes td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 14px;
+}
+
+.tabla-sedes tbody tr {
+  transition: all 0.2s;
+}
+
+.tabla-sedes tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.acciones-sede {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accion {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-ver {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-ver:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.btn-editar {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-editar:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.btn-eliminar {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-eliminar:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+.sede-cargando,
+.sede-error {
+  padding: 48px;
+  text-align: center;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.sede-error {
+  color: #dc2626;
+}
+
+.spinner-sede {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0ea5e9;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .lista-sedes {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .lista-sedes-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tabla-sedes {
+    font-size: 12px;
+  }
+
+  .tabla-sedes th,
+  .tabla-sedes td {
+    padding: 10px 8px;
+  }
+
+  .acciones-sede {
+    flex-direction: column;
+  }
+}
