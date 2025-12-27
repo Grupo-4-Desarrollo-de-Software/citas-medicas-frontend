@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { citasApi, especialidadesApi, pacientesApi, sedesApi } from '../services/api';
+import { citasApi, especialidadesApi, pacientesApi } from '../services/api';
 import type { Cita } from '../types/cita';
 import type { Especialidad } from '../types/especialidad';
 import type { Paciente } from '../types/paciente';
-import type { Sede } from '../types/sede';
 import './ListaCitas.css';
 
 type Alerta = { tipo: 'success' | 'error'; mensaje: string };
@@ -14,7 +13,6 @@ export function ListaCitas() {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [sedes, setSedes] = useState<Sede[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alerta, setAlerta] = useState<Alerta | null>(null);
@@ -35,11 +33,10 @@ export function ListaCitas() {
     try {
       setCargando(true);
       setError(null);
-      const [citasData, especialidadesData, pacientesData, sedesData] = await Promise.all([
+      const [citasData, especialidadesData, pacientesData] = await Promise.all([
         citasApi.listarCitas(),
         especialidadesApi.listarEspecialidades(),
         pacientesApi.listarPacientes(),
-        sedesApi.listarSedes(),
       ]);
       
       // Ordenar citas por ID de mayor a menor
@@ -48,7 +45,6 @@ export function ListaCitas() {
       setCitas(citasOrdenadas);
       setEspecialidades(especialidadesData);
       setPacientes(pacientesData);
-      setSedes(sedesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       console.error('Error al cargar citas:', err);
