@@ -143,36 +143,6 @@ export function ListaCitas() {
     return paciente ? paciente.nombre : `ID: ${id_paciente}`;
   };
 
-  // Función para obtener el nombre de la sede
-  const obtenerNombreSede = (id_sede: number | undefined): string => {
-    if (!id_sede) return 'No definido';
-    const sede = sedes.find(s => s.id_sede === id_sede);
-    return sede ? sede.nombre : `ID: ${id_sede}`;
-  };
-
-  // Función para obtener la clase CSS según el estado
-  const obtenerClaseEstado = (estado: string): string => {
-    const estadoNormalizado = estado.toLowerCase().trim();
-    
-    if (estadoNormalizado.includes('confirmada') || estadoNormalizado.includes('confirmed')) {
-      return 'estado-confirmada';
-    }
-    if (estadoNormalizado.includes('cancelada') || estadoNormalizado.includes('canceled') || estadoNormalizado.includes('cancelled')) {
-      return 'estado-cancelada';
-    }
-    if (estadoNormalizado.includes('completada') || estadoNormalizado.includes('completed')) {
-      return 'estado-completada';
-    }
-    if (estadoNormalizado.includes('proceso') || estadoNormalizado.includes('progress')) {
-      return 'estado-en-proceso';
-    }
-    if (estadoNormalizado.includes('programada') || estadoNormalizado.includes('scheduled') || estadoNormalizado.includes('pendiente') || estadoNormalizado.includes('pending')) {
-      return 'estado-programada';
-    }
-    
-    return 'estado-programada'; // Por defecto
-  };
-
   // Función para obtener estilos inline según el estado
   const obtenerEstilosEstado = (estado: string): React.CSSProperties => {
     const estadoNormalizado = estado.toLowerCase().trim();
