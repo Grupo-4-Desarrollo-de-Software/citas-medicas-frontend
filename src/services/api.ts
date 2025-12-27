@@ -1,117 +1,42 @@
-import type { Cita } from '../types/cita';
+import type { Cita } from "../types/cita";
 
-// Flags de control: el mock tiene prioridad. Solo se consulta la API real
-// si VITE_USE_REAL_API es true y VITE_USE_MOCK_DATA es false.
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-const USE_REAL_API = import.meta.env.VITE_USE_REAL_API === 'true';
-const SHOULD_USE_MOCK = USE_MOCK_DATA || !USE_REAL_API;
+// URL de la API real
+const API_BASE_URL = "https://citas-medicas-backend-1kwn.onrender.com/api";
 
-// Ruta relativa para que el proxy de Vite funcione
-const API_BASE_URL = '/api';
-
-let mockCitas: Cita[] = [
-  {
-    id_cita: 1,
-    paciente: 'Juan Perez',
-    medico: 'Dra. Ana Morales',
-    fecha: '2025-01-12',
-    hora: '09:30',
-    motivo: 'Control general',
-    estado: 'Confirmada',
-    notas: 'Llegar 10 minutos antes para registrar signos vitales.',
-  },
-  {
-    id_cita: 2,
-    paciente: 'Mariana Lopez',
-    medico: 'Dr. Carlos Rojas',
-    fecha: '2025-01-13',
-    hora: '11:00',
-    motivo: 'Consulta de seguimiento',
-    estado: 'Pendiente',
-  },
-  {
-    id_cita: 3,
-    paciente: 'Luis Fernandez',
-    medico: 'Dra. Gabriela Ruiz',
-    fecha: '2025-01-15',
-    hora: '15:45',
-    motivo: 'Dolor de espalda',
-    estado: 'Programada',
-    notas: 'Paciente refiere dolor al levantar peso.',
-  },
-  {
-    id_cita: 4,
-    paciente: 'Carolina Diaz',
-    medico: 'Dr. Mateo Vargas',
-    fecha: '2025-01-18',
-    hora: '08:15',
-    motivo: 'Evaluacion prequirurgica',
-    estado: 'Confirmada',
-  },
-];
-
-const mockDelay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const mockApi = {
-  async listarCitas(): Promise<Cita[]> {
-    await mockDelay();
-    return mockCitas;
-  },
-  async obtenerCitaPorId(id: number): Promise<Cita> {
-    await mockDelay();
-    const cita = mockCitas.find((item) => item.id_cita === id);
-    if (!cita) {
-      throw new Error(`Cita con id ${id} no encontrada (mock)`);
-    }
-    return cita;
-  },
-  async confirmarCita(id: number): Promise<Cita> {
-    await mockDelay();
-    const existe = mockCitas.find((item) => item.id_cita === id);
-    if (!existe) {
-      throw new Error(`Cita con id ${id} no encontrada (mock)`);
-    }
-    mockCitas = mockCitas.map((item) =>
-      item.id_cita === id ? { ...item, estado: 'Confirmada' } : item
-    );
-    return mockCitas.find((item) => item.id_cita === id)!;
-  },
-};
+// Tipos para autenticación
+export interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    name?: string;
+  };
+}
 
 export const citasApi = {
   /**
-   * Obtiene todas las citas medicas.
-   * Usa mock si SHOULD_USE_MOCK es true; de lo contrario consume la API real.
+   * Obtiene todas las citas médicas desde la API real.
    */
   async listarCitas(): Promise<Cita[]> {
-    if (SHOULD_USE_MOCK) {
-      return mockApi.listarCitas();
-    }
-
     const response = await fetch(`${API_BASE_URL}/citas`);
-    
+
     if (!response.ok) {
       throw new Error(`Error al obtener las citas: ${response.statusText}`);
     }
-    
+
     return await response.json();
   },
 
   /**
-   * Obtiene una cita medica por su ID.
-   * Usa mock si SHOULD_USE_MOCK es true; de lo contrario consume la API real.
+   * Obtiene una cita médica por su ID.
    */
   async obtenerCitaPorId(id: number): Promise<Cita> {
-    if (SHOULD_USE_MOCK) {
-      return mockApi.obtenerCitaPorId(id);
-    }
-
     const response = await fetch(`${API_BASE_URL}/citas/${id}`);
-    
+
     if (!response.ok) {
       throw new Error(`Error al obtener la cita: ${response.statusText}`);
     }
-    
+
     return await response.json();
   },
 
@@ -119,27 +44,91 @@ export const citasApi = {
    * Confirma una cita y retorna la cita actualizada.
    */
   async confirmarCita(id: number): Promise<Cita> {
-    if (SHOULD_USE_MOCK) {
-      return mockApi.confirmarCita(id);
-    }
-
     const response = await fetch(`${API_BASE_URL}/citas/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ estado: 'Confirmada' }),
+      body: JSON.stringify({ estado: "CONFIRMADA" }),
     });
 
     if (!response.ok) {
       throw new Error(`Error al confirmar la cita: ${response.statusText}`);
     }
 
-    // Si el backend responde sin cuerpo, devolvemos un fallback con el id y estado.
-    try {
-      return await response.json();
-    } catch (_) {
-      return { id_cita: id, estado: 'Confirmada' } as Cita;
+    return await response.json();
+  },
+};
+
+export const authApi = {
+  /**
+   * Inicia sesión con email y password
+   */
+  async login(email: string, password: string): Promise<LoginResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al iniciar sesión: ${response.statusText}`
+      );
     }
+
+    return await response.json();
+  },
+
+  /**
+   * Registra un nuevo usuario
+   */
+  async register(
+    nombre: string,
+    email: string,
+    password: string,
+    rol: string
+  ): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ nombre, email, password, rol }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Error al registrarse: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Cierra la sesión actual
+   */
+  logout(): void {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  },
+
+  /**
+   * Verifica si el usuario está autenticado
+   */
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem("token");
+  },
+
+  /**
+   * Obtiene el token actual
+   */
+  getToken(): string | null {
+    return localStorage.getItem("token");
   },
 };

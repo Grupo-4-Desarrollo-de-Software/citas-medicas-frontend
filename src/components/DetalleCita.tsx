@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { citasApi } from '../services/api';
 import type { Cita } from '../types/cita';
 import './DetalleCita.css';
@@ -47,7 +47,7 @@ export function DetalleCita() {
     try {
       const actualizada = await citasApi.confirmarCita(cita.id_cita);
       setCita((prev) =>
-        prev ? { ...prev, ...(actualizada || {}), estado: 'Confirmada' } : prev
+        prev ? { ...prev, ...(actualizada || {}), estado: 'CONFIRMADA' } : prev
       );
       setAlerta({ tipo: 'success', mensaje: `Cita #${cita.id_cita} confirmada` });
     } catch (err) {
@@ -59,6 +59,22 @@ export function DetalleCita() {
     } finally {
       setConfirmando(false);
     }
+  };
+
+  // Función para formatear la fecha
+  const formatearFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      weekday: 'long' 
+    });
+  };
+
+  // Función para formatear la hora
+  const formatearHora = (hora: string) => {
+    return hora.substring(0, 5);
   };
 
   if (cargando) {
@@ -111,47 +127,38 @@ export function DetalleCita() {
       )}
       <div className="detalle-cita-content">
         <div className="detalle-seccion">
-          <h3>Informacion del Paciente</h3>
-          <p><strong>Nombre:</strong> {cita.paciente}</p>
+          <h3>Información del Paciente</h3>
+          <p><strong>ID Paciente:</strong> {cita.id_paciente}</p>
         </div>
         <div className="detalle-seccion">
-          <h3>Informacion del Medico</h3>
-          <p><strong>Nombre:</strong> {cita.medico}</p>
+          <h3>Información del Médico</h3>
+          <p><strong>ID Médico:</strong> {cita.id_medico}</p>
         </div>
         <div className="detalle-seccion">
           <h3>Fecha y Hora</h3>
-          <p><strong>Fecha:</strong> {cita.fecha}</p>
-          <p><strong>Hora:</strong> {cita.hora}</p>
+          <p><strong>Fecha:</strong> {formatearFecha(cita.fecha)}</p>
+          <p><strong>Hora:</strong> {formatearHora(cita.hora)}</p>
         </div>
-        {cita.motivo && (
-          <div className="detalle-seccion">
-            <h3>Motivo de la Consulta</h3>
-            <p>{cita.motivo}</p>
-          </div>
-        )}
-        {cita.estado && (
-          <div className="detalle-seccion">
-            <h3>Estado</h3>
-            <p>
-              <span className={`cita-estado estado-${cita.estado.toLowerCase().replace(/\s+/g, '-')}`}>
-                {cita.estado}
-              </span>
-            </p>
-          </div>
-        )}
-        {cita.notas && (
-          <div className="detalle-seccion">
-            <h3>Notas Adicionales</h3>
-            <p>{cita.notas}</p>
-          </div>
-        )}
-        {!cita.motivo && !cita.estado && !cita.notas && (
-          <div className="detalle-seccion">
-            <p style={{ color: '#5f6368', fontStyle: 'italic' }}>
-              No hay informacion adicional disponible para esta cita.
-            </p>
-          </div>
-        )}
+        <div className="detalle-seccion">
+          <h3>Canal</h3>
+          <p>{cita.canal}</p>
+        </div>
+        <div className="detalle-seccion">
+          <h3>Estado</h3>
+          <p>
+            <span className={`cita-estado estado-${cita.estado.toLowerCase().replace(/\s+/g, '-')}`}>
+              {cita.estado}
+            </span>
+          </p>
+        </div>
+        <div className="detalle-seccion">
+          <h3>Fechas del Sistema</h3>
+          <p><strong>Creada:</strong> {new Date(cita.created_at).toLocaleString('es-ES')}</p>
+          <p><strong>Actualizada:</strong> {new Date(cita.updated_at).toLocaleString('es-ES')}</p>
+          {cita.confirmed_at && (
+            <p><strong>Confirmada:</strong> {new Date(cita.confirmed_at).toLocaleString('es-ES')}</p>
+          )}
+        </div>
       </div>
     </div>
   );

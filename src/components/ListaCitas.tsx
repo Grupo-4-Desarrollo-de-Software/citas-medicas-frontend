@@ -50,7 +50,7 @@ export function ListaCitas() {
       const actualizada = await citasApi.confirmarCita(id);
       setCitas((prev) =>
         prev.map((cita) =>
-          cita.id_cita === id ? { ...cita, ...(actualizada || {}), estado: 'Confirmada' } : cita
+          cita.id_cita === id ? { ...cita, ...(actualizada || {}), estado: 'CONFIRMADA' } : cita
         )
       );
       setAlerta({ tipo: 'success', mensaje: `Cita #${id} confirmada` });
@@ -67,6 +67,18 @@ export function ListaCitas() {
         return next;
       });
     }
+  };
+
+  // Función para formatear la fecha
+  const formatearFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  };
+
+  // Función para formatear la hora
+  const formatearHora = (hora: string) => {
+    // La hora viene como "00:02:00", tomamos solo HH:MM
+    return hora.substring(0, 5);
   };
 
   if (cargando) {
@@ -104,11 +116,11 @@ export function ListaCitas() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Paciente</th>
-              <th>Medico</th>
+              <th>ID Paciente</th>
+              <th>ID Médico</th>
               <th>Fecha</th>
               <th>Hora</th>
-              <th>Motivo</th>
+              <th>Canal</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -122,19 +134,15 @@ export function ListaCitas() {
                 style={{ cursor: 'pointer' }}
               >
                 <td className="col-id">#{cita.id_cita}</td>
-                <td className="col-paciente">{cita.paciente}</td>
-                <td className="col-medico">{cita.medico}</td>
-                <td className="col-fecha">{cita.fecha}</td>
-                <td className="col-hora">{cita.hora}</td>
-                <td className="col-motivo">{cita.motivo || '-'}</td>
+                <td className="col-paciente">{cita.id_paciente}</td>
+                <td className="col-medico">{cita.id_medico}</td>
+                <td className="col-fecha">{formatearFecha(cita.fecha)}</td>
+                <td className="col-hora">{formatearHora(cita.hora)}</td>
+                <td className="col-motivo">{cita.canal}</td>
                 <td className="col-estado">
-                  {cita.estado ? (
-                    <span className={`cita-estado estado-${cita.estado.toLowerCase().replace(/\s+/g, '-')}`}>
-                      {cita.estado}
-                    </span>
-                  ) : (
-                    '-'
-                  )}
+                  <span className={`cita-estado estado-${cita.estado.toLowerCase().replace(/\s+/g, '-')}`}>
+                    {cita.estado}
+                  </span>
                 </td>
                 <td className="col-acciones" onClick={(e) => e.stopPropagation()}>
                   <div className="acciones">
